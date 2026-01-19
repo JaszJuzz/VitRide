@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViTRide - Decentralized App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.8.0/web3.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #4F46E5; /* Indigo */
+            --secondary: #10B981; /* Emerald */
+            --bg: #F3F4F6;
+            --card-bg: #ffffff;
+            --text: #1F2937;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        
+        /* Header */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 15px 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .logo { font-size: 1.5rem; font-weight: 800; color: #111; }
+        .logo span { color: var(--primary); }
+        
+        /* Layout Grid */
+        .container { display: grid; grid-template-columns: 1fr 1.5fr; gap: 25px; max-width: 1200px; margin: 0 auto; }
+        
+        /* Cards */
+        .card { background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin-bottom: 25px; transition: transform 0.2s; }
+        .card h2 { font-size: 1.1rem; margin-top: 0; color: #4B5563; border-bottom: 2px solid #E5E7EB; padding-bottom: 10px; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+
+        /* Forms */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #6B7280; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.95rem; box-sizing: border-box; transition: all 0.3s; }
+        input:focus { border-color: var(--primary); outline: none; ring: 2px var(--primary); }
+
+        /* Buttons */
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: #4338ca; }
+        .btn-connect { background-color: #111; color: white; width: auto; padding: 10px 20px; }
+        .btn-logout { background-color: #EF4444; color: white; width: auto; padding: 10px 20px; font-size: 0.8rem; }
+        
+        /* Status Badges */
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; float: right; }
+        
+        /* Ride Item Card */
+        .ride-card { border: 1px solid #E5E7EB; padding: 20px; margin-bottom: 15px; border-radius: 12px; background: #FAFAFA; position: relative; border-left: 5px solid #ccc; }
+        .ride-info { margin: 10px 0; font-size: 0.9rem; color: #4B5563; }
+        .ride-info strong { color: #111; }
+        
+        /* Action Buttons specific colors */
+        .btn-action { margin-top: 15px; width: 100%; padding: 10px; color: white; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; }
+        .bg-blue { background: #2563EB; }
+        .bg-purple { background: #7C3AED; }
+        .bg-yellow { background: #F59E0B; color: #111; }
+        .bg-orange { background: #EA580C; }
+        .bg-green { background: #10B981; }
+
+        /* Connection Status */
+        .wallet-info { display: flex; align-items: center; gap: 10px; }
+        .dot { height: 10px; width: 10px; background-color: #EF4444; border-radius: 50%; display: inline-block; }
+        .dot.connected { background-color: #10B981; }
+        
+        /* Helper */
+        .hidden { display: none; }
+
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">ViT<span>Ride</span> <small style="font-size:0.8rem; font-weight:400; color:#666;">Decentralized Apps</small></div>
+        
+        <div class="wallet-info">
+            <div id="loginSection">
+                <button onclick="connectWallet()" class="btn btn-connect">Connect Wallet</button>
+            </div>
+            <div id="userSection" class="hidden" style="display: flex; align-items: center; gap: 15px;">
+                <div style="text-align: right;">
+                    <div style="font-size: 0.8rem; color: #6B7280;">Connected As</div>
+                    <div style="font-weight: 700; font-family: monospace;" id="accountDisplay">0x...</div>
+                </div>
+                <span class="dot connected"></span>
+                <button onclick="disconnectWallet()" class="btn btn-logout">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="left-panel">
+            
+            <div class="card">
+                <h2>👤 Mitra Driver Registration</h2>
+                <div class="form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="driverName" placeholder="Contoh: Budi Santoso">
+                </div>
+                <div class="form-group">
+                    <label>Nomor Polisi</label>
+                    <input type="text" id="driverPlate" placeholder="Contoh: B 1234 CD">
+                </div>
+                <div class="form-group">
+                    <label>Tipe Kendaraan</label>
+                    <select id="driverVehicle">
+                        <option value="Car">Mobil (Car)</option>
+                        <option value="Bike">Motor (Bike)</option>
+                        <option value="Van">Minivan</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tarif per KM (Wei)</label>
+                    <input type="number" id="driverRate" placeholder="Contoh: 1000">
+                </div>
+                <button onclick="registerDriver()" class="btn btn-primary">Daftar Sebagai Driver</button>
+            </div>
+
+            <div class="card">
+                <h2>🚖 Request a Ride</h2>
+                <div class="form-group">
+                    <label>Lokasi Jemput (Pickup)</label>
+                    <input type="text" id="pickup" placeholder="Lokasi Anda...">
+                </div>
+                <div class="form-group">
+                    <label>Tujuan (Destination)</label>
+                    <input type="text" id="destination" placeholder="Mau ke mana?">
+                </div>
+                <div class="form-group">
+                    <label>Catatan Tambahan (Notes)</label>
+                    <input type="text" id="notes" placeholder="Cth: Tunggu di lobi depan...">
+                </div>
+                <div class="form-group">
+                    <label>Harga Penawaran (ETH)</label>
+                    <input type="number" id="fare" placeholder="0.001">
+                </div>
+                <button onclick="requestRide()" class="btn btn-primary" style="background-color: #111;">Buat Pesanan</button>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="card" style="height: calc(100% - 50px); overflow-y: auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom: 2px solid #E5E7EB; padding-bottom:10px;">
+                    <h2 style="border:none; margin:0; padding:0;">📡 Live Ride Feed</h2>
+                    <button onclick="loadRides()" style="background:transparent; border:1px solid #ddd; padding:5px 10px; border-radius:6px; cursor:pointer;">🔄 Refresh</button>
+                </div>
+                
+                <div id="ridesContainer">
+                    <div style="text-align:center; color:#9CA3AF; padding:40px;">
+                        Silakan hubungkan wallet untuk melihat data.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="Web3.js"></script>
+
+</body>
+</html>
